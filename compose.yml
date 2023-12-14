@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  nerfstudio:
+    image: local/nerfstudio
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - CUDA_VERSION=11.8.0
+        # cf. https://developer.nvidia.com/cuda-gpus
+        - CUDA_ARCHITECTURES=86
+        - OS_VERSION=22.04
+    # for interactive shell
+    tty: true
+    restart: always
+    ports:
+      - 7007:7007
+    volumes:
+      # Dev Container で commit 可能. 
+      # push はログイン情報が必要なので host 側で.
+      - type: bind
+        source: "./"
+        target: "/workspace"
+      - type: bind
+        source: "/mnt/e/datasets"
+        target: "/datasets"
+    # for GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    shm_size: '16gb'
